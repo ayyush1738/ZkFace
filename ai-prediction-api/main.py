@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 import os
 from interference import run_inference
+from utils import get_file_phash, get_created_date  # ✅ Import utility functions
 
 app = FastAPI()
 
@@ -19,13 +20,18 @@ async def predict_video(file: UploadFile = File(...)):
     with open(temp_path, "wb") as f:
         f.write(contents)
 
-    # ✅ Run prediction using your real model
+    # Run your model inference
     result = run_inference(temp_path)
+
+    phash = get_file_phash(temp_path)
+    created_date = get_created_date(temp_path)
 
     return {
         "filename": result["filename"],
         "prediction_score": result["pred_score"],
         "prediction_label": result["pred_label"],
         "predicted_class": result["klass"],
-        "ground_truth": result["correct_label"]
+        "ground_truth": result["correct_label"],
+        "phash": phash,                            
+        "created_date": created_date               
     }
