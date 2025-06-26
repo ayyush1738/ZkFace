@@ -1,6 +1,6 @@
 import os
 import shutil
-from cvit_prediction import vids  # works due to PYTHONPATH
+from CViT.cvit_prediction import vids
 
 def run_inference(video_path: str):
     temp_dir = "api/uploaded_files"

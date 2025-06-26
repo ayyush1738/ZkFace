@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 import os
+from interference import run_inference
 
 app = FastAPI()
 
@@ -18,7 +19,13 @@ async def predict_video(file: UploadFile = File(...)):
     with open(temp_path, "wb") as f:
         f.write(contents)
 
-    # Here you would call your deepfake prediction function
-    # e.g. result = predict(temp_path)
+    # ✅ Run prediction using your real model
+    result = run_inference(temp_path)
 
-    return {"filename": filename, "status": "File received. Processing not implemented yet."}
+    return {
+        "filename": result["filename"],
+        "prediction_score": result["pred_score"],
+        "prediction_label": result["pred_label"],
+        "predicted_class": result["klass"],
+        "ground_truth": result["correct_label"]
+    }
