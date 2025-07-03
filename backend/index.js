@@ -14,11 +14,7 @@ app.use(express.json());
 app.use('/api', ipfsRoutes);
 app.use('/api', healthcheckRouter);
 
-app.get('/', (req, res) => {
-  res.send('Minting service is up and running!');
-});
-
 
 app.listen(PORT, () => {
-  console.log(`Minting service running at http://localhost:${PORT}`);
+  console.log(`Service running at http://localhost:${PORT}`);
 });

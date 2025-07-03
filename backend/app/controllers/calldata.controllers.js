@@ -1,57 +1,51 @@
 import axios from 'axios';
-import { decode } from 'base58-universal';
+import FormData from 'form-data';
 
-const IPFS_GATEWAY = 'https://ipfs.io/ipfs';
+const FASTAPI_URL = 'http://localhost:8000/predict/';
 const SCALE_FACTOR = 100;
 
-const hexToDecimal = (hex) => BigInt(`0x${hex}`).toString(10);
 const scaleFloat = (num, factor) => Math.round(num * factor).toString(10);
 
-const cidToDecimal = (cid) => {
-  const bytes = decode(cid);
-  const hex = Buffer.from(bytes).toString('hex');
-  const bigIntValue = BigInt(`0x${hex}`);
-  return bigIntValue.toString(10);
-};
-
-const fetchFromIPFS = async (cid) => {
+const fetchCIDFromFastAPI = async (fileBuffer, filename) => {
   try {
-    const response = await axios.get(`${IPFS_GATEWAY}/${cid}`);
-    const data = response.data;
+    const form = new FormData();
+    form.append("file", fileBuffer, filename);
 
-    const pHash = data.phash || data.video?.phash;
-    const pred = data.prediction_score || data.video?.pred;
+    const response = await axios.post(FASTAPI_URL, form, {
+      headers: form.getHeaders()
+    });
 
-    if (!pHash || pred === undefined) {
-      throw new Error("Invalid IPFS JSON structure.");
-    }
+    const { ipfs_cid, phash, prediction_score } = response.data;
 
-    return {
-      pHash: hexToDecimal(pHash),
-      cid: cidToDecimal(cid),
-      ai_prediction: scaleFloat(Array.isArray(pred) ? pred[0] : pred, SCALE_FACTOR),
-      threshold: scaleFloat(0.55, SCALE_FACTOR)
-    };
+    return { cid: ipfs_cid, phash, prediction_score };
   } catch (error) {
-    console.error('Error fetching data from IPFS:', error.message);
+    console.error('Error getting CID from FastAPI:', error.message);
     return null;
   }
 };
 
-export const getProcessedIPFSData = async (req, res) => {
+export const processAndGetIPFSData = async (req, res) => {
   try {
-    const { cid } = req.query;
+    const file = req.file;
 
-    if (!cid) {
-      return res.status(400).json({ error: 'Missing cid query parameter' });
+    if (!file) {
+      return res.status(400).json({ error: 'Missing video file upload' });
     }
 
-    const processedData = await fetchFromIPFS(cid);
-    if (!processedData) {
-      return res.status(500).json({ error: 'Failed to process IPFS data' });
+    const result = await fetchCIDFromFastAPI(file.buffer, file.originalname);
+
+    if (!result) {
+      return res.status(500).json({ error: 'Failed to process file' });
     }
 
-    return res.json(processedData);
+    // Optionally scale prediction_score if needed
+    const scaled_score = scaleFloat(result.prediction_score, SCALE_FACTOR);
+
+    return res.json({
+      prediction_score: scaled_score,
+      phash: result.phash,
+      cid: result.cid
+    });
   } catch (err) {
     console.error('Controller Error:', err.message);
     return res.status(500).json({ error: 'Internal Server Error' });
