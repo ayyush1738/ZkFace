@@ -1,0 +1,4 @@
+.env
+circom
+rustup-init.exe
+node_modules
