@@ -1,5 +1,12 @@
 import axios from 'axios';
 import FormData from 'form-data';
+import fs from 'fs';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+// Fix __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const FASTAPI_URL = 'http://localhost:8000/predict/';
 const SCALE_FACTOR = 100;
@@ -19,7 +26,7 @@ const fetchCIDFromFastAPI = async (fileBuffer, filename) => {
 
     return { cid: ipfs_cid, phash, prediction_score };
   } catch (error) {
-    console.error('Error getting CID from FastAPI:', error.message);
+    console.error('❌ Error getting CID from FastAPI:', error.message);
     return null;
   }
 };
@@ -38,16 +45,29 @@ export const processAndGetIPFSData = async (req, res) => {
       return res.status(500).json({ error: 'Failed to process file' });
     }
 
-    // Optionally scale prediction_score if needed
     const scaled_score = scaleFloat(result.prediction_score, SCALE_FACTOR);
 
-    return res.json({
+    const inputData = {
       prediction_score: scaled_score,
       phash: result.phash,
       cid: result.cid
-    });
+    };
+
+    // Ensure circuit/ directory exists
+    const circuitDir = path.join(__dirname, '../circuit');
+    if (!fs.existsSync(circuitDir)) {
+      fs.mkdirSync(circuitDir, { recursive: true });
+    }
+
+    // Write input.json
+    const inputPath = path.join(circuitDir, 'input.json');
+    fs.writeFileSync(inputPath, JSON.stringify(inputData, null, 2));
+
+    console.log('✅ input.json written to:', inputPath);
+
+    return res.json(inputData);
   } catch (err) {
-    console.error('Controller Error:', err.message);
+    console.error('❌ Controller Error:', err);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
