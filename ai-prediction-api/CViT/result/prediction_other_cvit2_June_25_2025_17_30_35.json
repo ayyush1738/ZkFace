@@ -1,0 +1,74 @@
+{
+    "video": {
+        "name": [
+            "0017_fake.mp4.mp4",
+            "0045.mp4.mp4",
+            "0048_fake.mp4.mp4",
+            "28__talking_angry_couch.mp4.mp4",
+            "aajsqyyjni.mp4",
+            "anndvqgoko.mp4",
+            "azlfodrdst.mp4",
+            "knqhpwoigk.mp4",
+            "sample_1.mp4",
+            "sample_2.mp4",
+            "sample_3.mp4",
+            "sample_4.mp4"
+        ],
+        "pred": [
+            0.996986448764801,
+            0.42456066608428955,
+            0.9893433451652527,
+            0.15503555536270142,
+            0.3253501057624817,
+            0.07716917991638184,
+            0.5795634984970093,
+            0.12984538078308105,
+            0.9839772582054138,
+            0.842303454875946,
+            0.16804492473602295,
+            0.03964388370513916
+        ],
+        "klass": [
+            "uncategorized",
+            "uncategorized",
+            "uncategorized",
+            "uncategorized",
+            "uncategorized",
+            "uncategorized",
+            "uncategorized",
+            "uncategorized",
+            "uncategorized",
+            "uncategorized",
+            "uncategorized",
+            "uncategorized"
+        ],
+        "pred_label": [
+            "FAKE",
+            "REAL",
+            "FAKE",
+            "REAL",
+            "REAL",
+            "REAL",
+            "FAKE",
+            "REAL",
+            "FAKE",
+            "FAKE",
+            "REAL",
+            "REAL"
+        ],
+        "correct_label": [
+            "unknown",
+            "unknown",
+            "unknown",
+            "unknown",
+            "unknown",
+            "unknown",
+            "unknown",
+            "unknown",
+            "unknown",
+            "unknown",
+            "unknown",
+            "unknown"
+        ]
+    }
+}

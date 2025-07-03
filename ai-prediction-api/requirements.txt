@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+imagehash
+pillow
+opencv-python
+torch
+facenet-pytorch
+python-multipart
+einops
+albumentations
+opencv-python-headless
+scikit-image
