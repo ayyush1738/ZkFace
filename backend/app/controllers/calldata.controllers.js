@@ -1,9 +1,7 @@
-import { create } from 'ipfs-http-client';
 import axios from 'axios';
 import { decode } from 'base58-universal';
 
 const IPFS_GATEWAY = 'https://ipfs.io/ipfs';
-const ipfs = create({ url: 'http://127.0.0.1:5001' }); // local IPFS node
 const SCALE_FACTOR = 100;
 
 const hexToDecimal = (hex) => BigInt(`0x${hex}`).toString(10);
@@ -14,19 +12,6 @@ const cidToDecimal = (cid) => {
   const hex = Buffer.from(bytes).toString('hex');
   const bigIntValue = BigInt(`0x${hex}`);
   return bigIntValue.toString(10);
-};
-
-const getLatestCID = async (directoryCID) => {
-  try {
-    let latestCID = null;
-    for await (const file of ipfs.ls(directoryCID)) {
-      latestCID = file.cid.toString();
-    }
-    return latestCID;
-  } catch (error) {
-    console.error('Error fetching latest CID:', error.message);
-    return null;
-  }
 };
 
 const fetchFromIPFS = async (cid) => {
@@ -55,18 +40,13 @@ const fetchFromIPFS = async (cid) => {
 
 export const getProcessedIPFSData = async (req, res) => {
   try {
-    const { directoryCID } = req.query;
+    const { cid } = req.query;
 
-    if (!directoryCID) {
-      return res.status(400).json({ error: 'Missing directoryCID query parameter' });
+    if (!cid) {
+      return res.status(400).json({ error: 'Missing cid query parameter' });
     }
 
-    const latestCID = await getLatestCID(directoryCID);
-    if (!latestCID) {
-      return res.status(404).json({ error: 'No files found under the provided CID' });
-    }
-
-    const processedData = await fetchFromIPFS(latestCID);
+    const processedData = await fetchFromIPFS(cid);
     if (!processedData) {
       return res.status(500).json({ error: 'Failed to process IPFS data' });
     }

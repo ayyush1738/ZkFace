@@ -1,18 +1,24 @@
 import express from 'express';
 import cors from 'cors';
+import ipfsRoutes from './app/routes/calldata.routes.js';
+import healthcheckRouter from './app/routes/healthcheck.routes.js';
 import dotenv from 'dotenv';
-import ipfsRoutes from './routes/calldata.routes.js';
-
 dotenv.config();
 
-const PORT = process.env.PORT || 5001
+const PORT = process.env.PORT || 5001;
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use('/api', ipfsRoutes);
+app.use('/api', healthcheckRouter);
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Minting service running at http://0.0.0.0:${PORT}`);
+app.get('/', (req, res) => {
+  res.send('Minting service is up and running!');
+});
+
+
+app.listen(PORT, () => {
+  console.log(`Minting service running at http://localhost:${PORT}`);
 });
