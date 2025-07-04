@@ -15,11 +15,13 @@
   "dependencies": {
     "axios": "^1.10.0",
     "base58-universal": "^2.0.0",
+    "bs58": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^5.1.0",
     "form-data": "^4.0.3",
     "multer": "^2.0.1",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "snarkjs": "^0.7.5"
   }
 }

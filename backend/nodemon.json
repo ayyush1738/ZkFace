@@ -1,0 +1,11 @@
+{
+  "watch": ["app"],
+  "ignore": [
+    "app/circuit/*.json",
+    "app/circuit/*.wtns",
+    "app/circuit/*.zkey",
+    "app/circuit/*.ptau"
+  ],
+  "ext": "js,json",
+  "exec": "node index.js"
+}
