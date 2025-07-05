@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Image, CheckCircle, XCircle, Loader2, ExternalLink } from 'lucide-react';
+import { Upload, Video, CheckCircle, XCircle, Loader2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface VerificationResult {
@@ -20,7 +20,7 @@ interface VerificationResult {
 
 export function VerifySection() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<VerificationResult | null>(null);
@@ -31,7 +31,7 @@ export function VerifySection() {
       setUploadedFile(file);
       const reader = new FileReader();
       reader.onload = () => {
-        setImagePreview(reader.result as string);
+        setVideoPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
       setResult(null);
@@ -41,10 +41,10 @@ export function VerifySection() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
+      'video/*': ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.wmv', '.flv']
     },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 100 * 1024 * 1024, // 100MB
   });
 
   const simulateProcessing = async () => {
@@ -53,7 +53,7 @@ export function VerifySection() {
 
     // Simulate processing steps
     const steps = [
-      { message: 'Uploading image...', progress: 20 },
+      { message: 'Uploading video...', progress: 20 },
       { message: 'Running AI analysis...', progress: 40 },
       { message: 'Generating Zero-Knowledge Proof...', progress: 70 },
       { message: 'Verifying on blockchain...', progress: 90 },
@@ -91,11 +91,11 @@ export function VerifySection() {
         >
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
             <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-              Verify Image Authenticity
+              Verify Video Authenticity
             </span>
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Upload an image to detect if it's been manipulated using our privacy-preserving AI.
+            Upload a video to detect if it&apos;s been manipulated using our privacy-preserving AI.
           </p>
         </motion.div>
 
@@ -110,7 +110,7 @@ export function VerifySection() {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Upload className="h-5 w-5 text-cyan-400" />
-                  Upload Image
+                  Upload Video
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -125,32 +125,32 @@ export function VerifySection() {
                   <input {...getInputProps()} />
                   <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   {isDragActive ? (
-                    <p className="text-cyan-400">Drop the image here...</p>
+                    <p className="text-cyan-400">Drop the video here...</p>
                   ) : (
                     <div>
                       <p className="text-gray-300 mb-2">
-                        Drag & drop an image here, or click to select
+                        Drag & drop a video here, or click to select
                       </p>
                       <p className="text-sm text-gray-500">
-                        PNG, JPG, GIF up to 10MB
+                        MP4, MOV, AVI, MKV up to 100MB
                       </p>
                     </div>
                   )}
                 </div>
 
-                {imagePreview && (
+                {videoPreview && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="relative"
                   >
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
+                    <video
+                      src={videoPreview}
+                      controls
                       className="w-full h-48 object-cover rounded-lg border border-gray-700"
                     />
                     <Badge className="absolute top-2 right-2 bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
-                      <Image className="h-3 w-3 mr-1" />
+                      <Video className="h-3 w-3 mr-1" />
                       {uploadedFile?.name}
                     </Badge>
                   </motion.div>
@@ -218,7 +218,7 @@ export function VerifySection() {
                       <h3 className={`text-2xl font-bold ${
                         result.isDeepfake ? 'text-red-400' : 'text-green-400'
                       }`}>
-                        {result.isDeepfake ? 'Deepfake Detected' : 'Authentic Image'}
+                        {result.isDeepfake ? 'Deepfake Detected' : 'Authentic Video'}
                       </h3>
                       <p className="text-gray-300 mt-2">
                         Confidence: {result.confidence.toFixed(1)}%
@@ -255,7 +255,7 @@ export function VerifySection() {
                 ) : (
                   <div className="text-center text-gray-400 py-12">
                     <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Upload an image to see verification results</p>
+                    <p>Upload a video to see verification results</p>
                   </div>
                 )}
               </CardContent>

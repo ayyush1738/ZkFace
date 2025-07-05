@@ -9,7 +9,7 @@ const features = [
   {
     icon: Upload,
     title: 'Secure Upload',
-    description: 'Drag and drop your images for instant analysis. All data is processed locally first.',
+    description: 'Drag and drop your videos for instant analysis. All data is processed locally first.',
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-500/10',
     borderColor: 'border-cyan-500/20',
@@ -17,7 +17,7 @@ const features = [
   {
     icon: Shield,
     title: 'Zero-Knowledge Proofs',
-    description: 'Generate cryptographic proofs without revealing sensitive image data or AI predictions.',
+    description: 'Generate cryptographic proofs without revealing sensitive video data or AI predictions.',
     color: 'text-purple-400',
     bgColor: 'bg-purple-500/10',
     borderColor: 'border-purple-500/20',
@@ -41,7 +41,7 @@ const features = [
   {
     icon: Lock,
     title: 'Privacy Preserved',
-    description: 'Your images and AI scores remain private while proving authenticity publicly.',
+    description: 'Your videos and AI scores remain private while proving authenticity publicly.',
     color: 'text-pink-400',
     bgColor: 'bg-pink-500/10',
     borderColor: 'border-pink-500/20',

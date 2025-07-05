@@ -9,7 +9,7 @@ const benefits = [
   {
     icon: Shield,
     title: 'Privacy First',
-    description: 'Your images and AI predictions remain completely private while still providing verifiable proof of authenticity.',
+    description: 'Your videos and AI predictions remain completely private while still providing verifiable proof of authenticity.',
     gradient: 'from-cyan-400 to-blue-500',
   },
   {

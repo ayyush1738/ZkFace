@@ -10,8 +10,8 @@ const detailedSteps = [
   {
     id: 1,
     icon: Upload,
-    title: 'Image Upload & Preprocessing',
-    description: 'Your image is securely uploaded and preprocessed locally before any analysis begins.',
+    title: 'Video Upload & Preprocessing',
+    description: 'Your video is securely uploaded and preprocessed locally before any analysis begins.',
     details: [
       'End-to-end encryption during upload',
       'Local preprocessing to protect privacy',
@@ -26,7 +26,7 @@ const detailedSteps = [
     id: 2,
     icon: Brain,
     title: 'AI Model Analysis',
-    description: 'Advanced EfficientNet-ViT hybrid model analyzes the image for deepfake indicators.',
+    description: 'Advanced EfficientNet-ViT hybrid model analyzes the video for deepfake indicators.',
     details: [
       'EfficientNet feature extraction',
       'Vision Transformer attention analysis',
@@ -182,7 +182,7 @@ export function DetailedHowItWorks() {
                 Privacy-First Architecture
               </h3>
               <p className="text-gray-300 max-w-3xl mx-auto">
-                Our system ensures that sensitive data like image content, perceptual hashes, and AI prediction scores 
+                Our system ensures that sensitive data like video content, perceptual hashes, and AI prediction scores 
                 never leave your device in plaintext. Only the cryptographic proof is shared, maintaining complete privacy 
                 while enabling public verification.
               </p>
