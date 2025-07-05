@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import bs58 from 'bs58';
 import { execSync } from 'child_process';
 import * as snarkjs from 'snarkjs';
+import { verifyZKProofFromFile } from './callVerifier.controllers.js'; 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,10 +27,9 @@ const fetchCIDFromFastAPI = async (fileBuffer, filename) => {
     });
 
     const { ipfs_cid, phash, prediction_score } = response.data;
-
     return { cid: ipfs_cid, phash, prediction_score };
   } catch (error) {
-    console.error('❌ Error getting CID from FastAPI:', error.message);
+    console.error('Error getting CID from FastAPI:', error.message);
     return null;
   }
 };
@@ -42,15 +42,10 @@ const run = (cmd) => {
 export const processAndGetIPFSData = async (req, res) => {
   try {
     const file = req.file;
-
-    if (!file) {
-      return res.status(400).json({ error: 'Missing video file upload' });
-    }
+    if (!file) return res.status(400).json({ error: 'Missing video file upload' });
 
     const result = await fetchCIDFromFastAPI(file.buffer, file.originalname);
-    if (!result) {
-      return res.status(500).json({ error: 'Failed to process file' });
-    }
+    if (!result) return res.status(500).json({ error: 'Failed to process file' });
 
     const scaled_score = scaleFloat(result.prediction_score, SCALE_FACTOR);
     const inputData = {
@@ -64,7 +59,6 @@ export const processAndGetIPFSData = async (req, res) => {
 
     const inputPath = path.join(circuitDir, 'input.json');
     fs.writeFileSync(inputPath, JSON.stringify(inputData, null, 2));
-    console.log('✅ input.json written to:', inputPath);
 
     const wasmPath = path.join(circuitDir, `${CIRCUIT_NAME}_js/${CIRCUIT_NAME}.wasm`);
     const zkeyPath = path.join(circuitDir, `${CIRCUIT_NAME}_0001.zkey`);
@@ -73,39 +67,44 @@ export const processAndGetIPFSData = async (req, res) => {
     const publicPath = path.join(circuitDir, 'public.json');
     const witnessGenJS = path.join(circuitDir, `${CIRCUIT_NAME}_js/generate_witness.js`);
 
-    // 1. Generate Witness
     run(`node ${witnessGenJS} ${wasmPath} ${inputPath} ${witnessPath}`);
-
-    // 2. Generate Proof
     run(`snarkjs groth16 prove ${zkeyPath} ${witnessPath} ${proofPath} ${publicPath}`);
 
-    // 3. Generate Calldata using snarkjs JS API
     const proof = JSON.parse(fs.readFileSync(proofPath));
     const pub = JSON.parse(fs.readFileSync(publicPath));
     const rawCalldata = await snarkjs.groth16.exportSolidityCallData(proof, pub);
 
-    // 🛠️ Parse the stringified calldata to a proper JS array structure
     const argv = rawCalldata
-      .replace(/["[\]\s]/g, '') // remove brackets, quotes, whitespace
+      .replace(/["[\]\s]/g, '')
       .split(',')
-      .map(x => '0x' + BigInt(x).toString(16).padStart(64, '0')); // to padded hex
+      .map(x => '0x' + BigInt(x).toString(16).padStart(64, '0'));
 
     const structuredCalldata = [
-      [argv[0], argv[1]],                             // a
-      [[argv[2], argv[3]], [argv[4], argv[5]]],       // b
-      [argv[6], argv[7]],                             // c
-      [argv[8]]                                       // publicSignals
+      [argv[0], argv[1]],
+      [[argv[2], argv[3]], [argv[4], argv[5]]],
+      [argv[6], argv[7]],
+      [argv[8]]
     ];
 
+    const verifyData = {
+      a: structuredCalldata[0],
+      b: structuredCalldata[1],
+      c: structuredCalldata[2],
+      input: structuredCalldata[3]
+    };
+
+    const verifyPath = path.join(circuitDir, 'verify.json');
+    fs.writeFileSync(verifyPath, JSON.stringify(verifyData, null, 2));
+    console.log('verify.json written.');
+
+    const isValid = await verifyZKProofFromFile(); 
     return res.json({
       ...inputData,
-      proof,
-      publicSignals: pub,
-      calldata: structuredCalldata
+      verified: isValid
     });
 
   } catch (err) {
-    console.error('❌ Controller Error:', err);
+    console.error('Controller Error:', err);
     return res.status(500).json({ error: 'Internal Server Error during proof generation' });
   }
 };
