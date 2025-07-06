@@ -28,7 +28,6 @@ export async function verifyZKProofFromFile() {
     input = toBigNumberArray(input); 
 
     const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
-    const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
     const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
     const result = await contract.verifyProof(a, b, c, input);
