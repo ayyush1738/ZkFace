@@ -38,13 +38,20 @@ interface ProofAccount {
 
 export function VerifySection() {
   const router = useRouter();
-  const {connected} = useContext(WalletContext);
-  if(!connected) {
-    toast.error("Please connect the wallet");
-    router.push("/");
-  }
+  const { connected } = useContext(WalletContext);
 
-  const {publicKey, signTransaction} = useWallet();
+  useEffect(() => {
+    if (!connected) {
+      toast.error("Please connect the wallet");
+      router.push("/");
+    }
+  }, [connected, router]);
+
+  if (!connected) return null;
+
+
+
+  const { publicKey, signTransaction } = useWallet();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -78,19 +85,19 @@ export function VerifySection() {
 
   const fetchUserProofAccounts = useCallback(async () => {
     if (!publicKey) return;
-    
+
     setLoadingAccounts(true);
     try {
       const connection = new Connection("https://api.devnet.solana.com");
       const dummyKeypair = Keypair.generate();
-      
+
       // Create a simple wallet implementation for read-only operations
       const wallet = {
         publicKey: dummyKeypair.publicKey,
         signTransaction: async (tx: any) => tx,
         signAllTransactions: async (txs: any[]) => txs,
       };
-      
+
       const provider = new AnchorProvider(connection, wallet, {});
       const programId = new PublicKey("71MAQYwkwnJqyt5yRvFPBcs9t7mnsRyc3Eih9qNjCCDa");
       const program = new Program(idl as any, programId, provider);
@@ -180,12 +187,12 @@ export function VerifySection() {
       }
       const signedTx = await signTransaction(recoveredTx);
       const signedRes = await fetch("http://localhost:5001/api/submit-txn", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            signedTx: signedTx.serialize().toString("base64"),
-          }),
-        });
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          signedTx: signedTx.serialize().toString("base64"),
+        }),
+      });
       if (!signedRes.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -257,11 +264,10 @@ export function VerifySection() {
               <CardContent className="space-y-4">
                 <div
                   {...getRootProps()}
-                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-300 ${
-                    isDragActive
+                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-300 ${isDragActive
                       ? 'border-cyan-400 bg-cyan-400/10'
                       : 'border-gray-600 hover:border-gray-500'
-                  }`}
+                    }`}
                 >
                   <input {...getInputProps()} />
                   <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -347,20 +353,18 @@ export function VerifySection() {
                     className="space-y-6"
                   >
                     <div className="text-center">
-                      <div className={`inline-flex p-4 rounded-full mb-4 ${
-                        result.isDeepfake 
-                          ? 'bg-red-500/20 border border-red-500/30' 
+                      <div className={`inline-flex p-4 rounded-full mb-4 ${result.isDeepfake
+                          ? 'bg-red-500/20 border border-red-500/30'
                           : 'bg-green-500/20 border border-green-500/30'
-                      }`}>
+                        }`}>
                         {result.isDeepfake ? (
                           <XCircle className="h-8 w-8 text-red-400" />
                         ) : (
                           <CheckCircle className="h-8 w-8 text-green-400" />
                         )}
                       </div>
-                      <h3 className={`text-2xl font-bold ${
-                        result.isDeepfake ? 'text-red-400' : 'text-green-400'
-                      }`}>
+                      <h3 className={`text-2xl font-bold ${result.isDeepfake ? 'text-red-400' : 'text-green-400'
+                        }`}>
                         {result.isDeepfake ? 'Deepfake Detected' : 'Authentic Video'}
                       </h3>
                       <p className="text-gray-300 mt-2">
@@ -372,7 +376,7 @@ export function VerifySection() {
                       <div className="flex justify-between items-center py-2 border-b border-gray-700">
                         <span className="text-gray-400">Perceptual Hash:</span>
                         <div className="flex items-center gap-2">
-                          <code 
+                          <code
                             className="text-xs text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded cursor-pointer hover:bg-cyan-500/20"
                             onClick={() => {
                               navigator.clipboard.writeText(result.phash);
@@ -387,7 +391,7 @@ export function VerifySection() {
                       <div className="flex justify-between items-center py-2 border-b border-gray-700">
                         <span className="text-gray-400">IPFS CID:</span>
                         <div className="flex items-center gap-2">
-                          <code 
+                          <code
                             className="text-xs text-purple-400 bg-purple-500/10 px-2 py-1 rounded cursor-pointer hover:bg-purple-500/20"
                             onClick={() => {
                               navigator.clipboard.writeText(result.ipfsCid);
@@ -476,11 +480,10 @@ export function VerifySection() {
                             ) : (
                               <XCircle className="h-4 w-4 text-red-400" />
                             )}
-                            <Badge className={`text-xs ${
-                              account.predictionScore > 55 
-                                ? 'bg-red-500/20 text-red-400 border-red-500/30' 
+                            <Badge className={`text-xs ${account.predictionScore > 55
+                                ? 'bg-red-500/20 text-red-400 border-red-500/30'
                                 : 'bg-green-500/20 text-green-400 border-green-500/30'
-                            }`}>
+                              }`}>
                               {account.predictionScore > 55 ? 'FAKE' : 'REAL'}
                             </Badge>
                           </div>
@@ -539,20 +542,18 @@ export function VerifySection() {
               <div className="space-y-6">
                 {/* Status Card */}
                 <div className="text-center">
-                  <div className={`inline-flex p-4 rounded-full mb-4 ${
-                    selectedAccount.predictionScore > 50 
-                      ? 'bg-red-500/20 border border-red-500/30' 
+                  <div className={`inline-flex p-4 rounded-full mb-4 ${selectedAccount.predictionScore > 50
+                      ? 'bg-red-500/20 border border-red-500/30'
                       : 'bg-green-500/20 border border-green-500/30'
-                  }`}>
+                    }`}>
                     {selectedAccount.predictionScore > 50 ? (
                       <XCircle className="h-8 w-8 text-red-400" />
                     ) : (
                       <CheckCircle className="h-8 w-8 text-green-400" />
                     )}
                   </div>
-                  <h3 className={`text-2xl font-bold ${
-                    selectedAccount.predictionScore > 50 ? 'text-red-400' : 'text-green-400'
-                  }`}>
+                  <h3 className={`text-2xl font-bold ${selectedAccount.predictionScore > 50 ? 'text-red-400' : 'text-green-400'
+                    }`}>
                     {selectedAccount.predictionScore > 50 ? 'Deepfake Detected' : 'Authentic Video'}
                   </h3>
                   <p className="text-gray-300 mt-2">

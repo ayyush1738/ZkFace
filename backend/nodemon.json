@@ -6,6 +6,5 @@
     "app/circuit/*.zkey",
     "app/circuit/*.ptau"
   ],
-  "ext": "js,json",
-  "exec": "node index.js"
+  "ext": "js,json"
 }
