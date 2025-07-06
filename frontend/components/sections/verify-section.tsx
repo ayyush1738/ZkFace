@@ -9,8 +9,9 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Upload, Video, CheckCircle, XCircle, Loader2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-import { WalletContext } from '@solana/wallet-adapter-react';
+import { useConnection, useWallet, WalletContext } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation'
+import { Transaction } from '@solana/web3.js';
 
 interface VerificationResult {
   isDeepfake: boolean;
@@ -19,16 +20,19 @@ interface VerificationResult {
   ipfsCid: string;
   verified: boolean;
   timestamp: Date;
+  signature: string;
+  predictionLabel: string;
 }
 
 export function VerifySection() {
-  const router = useRouter()
+  const router = useRouter();
   const {connected} = useContext(WalletContext);
   if(!connected) {
     toast.error("Please connect the wallet");
     router.push("/");
   }
 
+  const {publicKey, signTransaction} = useWallet();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -71,6 +75,7 @@ export function VerifySection() {
       // Create form data
       const formData = new FormData();
       formData.append('file', uploadedFile);
+      formData.append('userPubkey', publicKey?.toString() || '');
 
       // Make API call to backend
       const response = await fetch('http://localhost:5001/api/upload', {
@@ -82,21 +87,46 @@ export function VerifySection() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      setProgress(60);
+      toast.info('Sign the transaction to store prove on blockchain');
+
+      const data = await response.json();
+
+      const recoveredTx = Transaction.from(Buffer.from(data.transaction, "base64"));
+      if (!signTransaction) {
+        throw new Error("Wallet not connected or sign transaction not available");
+      }
+      const signedTx = await signTransaction(recoveredTx);
+      const signedRes = await fetch("http://localhost:5001/api/submit-txn", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            signedTx: signedTx.serialize().toString("base64"),
+          }),
+        });
+      console.log(signedRes);
+      if (!signedRes.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       setProgress(80);
       toast.info('Finalizing results...');
 
-      const data = await response.json();
+      const signature = await signedRes.json();
+
       setProgress(100);
       toast.success('Processing complete!');
 
       // Map API response to our result interface
       const result: VerificationResult = {
-        isDeepfake: parseInt(data.prediction_score) > 50,
+        isDeepfake: data.prediction_label === 'FAKE',
         confidence: parseFloat(data.prediction_score),
         phash: data.phash,
         ipfsCid: data.cid,
-        verified: data.verified,
+        verified: signedRes.ok,
         timestamp: new Date(),
+        signature: signature.transaction || '',
+        predictionLabel: data.prediction_label
       };
 
       setResult(result);
@@ -250,7 +280,7 @@ export function VerifySection() {
                         {result.isDeepfake ? 'Deepfake Detected' : 'Authentic Video'}
                       </h3>
                       <p className="text-gray-300 mt-2">
-                        Confidence: {result.confidence.toFixed(1)}%
+                        Prediction: {result.predictionLabel} | Confidence: {result.confidence.toFixed(1)}%
                       </p>
                     </div>
 
@@ -258,34 +288,61 @@ export function VerifySection() {
                       <div className="flex justify-between items-center py-2 border-b border-gray-700">
                         <span className="text-gray-400">Perceptual Hash:</span>
                         <div className="flex items-center gap-2">
-                          <code className="text-xs text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded">
+                          <code 
+                            className="text-xs text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded cursor-pointer hover:bg-cyan-500/20"
+                            onClick={() => {
+                              navigator.clipboard.writeText(result.phash);
+                              toast.success('Perceptual hash copied to clipboard!');
+                            }}
+                            title="Click to copy"
+                          >
                             {result.phash.substring(0, 10)}...
                           </code>
-                          <ExternalLink className="h-4 w-4 text-gray-400 cursor-pointer hover:text-white" />
                         </div>
                       </div>
                       <div className="flex justify-between items-center py-2 border-b border-gray-700">
                         <span className="text-gray-400">IPFS CID:</span>
                         <div className="flex items-center gap-2">
-                          <code className="text-xs text-purple-400 bg-purple-500/10 px-2 py-1 rounded">
+                          <code 
+                            className="text-xs text-purple-400 bg-purple-500/10 px-2 py-1 rounded cursor-pointer hover:bg-purple-500/20"
+                            onClick={() => {
+                              navigator.clipboard.writeText(result.ipfsCid);
+                              toast.success('IPFS CID copied to clipboard!');
+                            }}
+                            title="Click to copy"
+                          >
                             {result.ipfsCid.substring(0, 10)}...
                           </code>
-                          <ExternalLink className="h-4 w-4 text-gray-400 cursor-pointer hover:text-white" />
                         </div>
                       </div>
-                      <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                        <span className="text-gray-400">Blockchain Verified:</span>
-                        <div className="flex items-center gap-2">
-                          {result.verified ? (
+                      {result.verified && (
+                        <div className="flex justify-between items-center py-2 border-b border-gray-700">
+                          <span className="text-gray-400">Blockchain Verified:</span>
+                          <div className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-green-400" />
-                          ) : (
-                            <XCircle className="h-4 w-4 text-red-400" />
-                          )}
-                          <span className={result.verified ? 'text-green-400' : 'text-red-400'}>
-                            {result.verified ? 'Yes' : 'No'}
-                          </span>
+                            <span className="text-green-400">Yes</span>
+                          </div>
                         </div>
-                      </div>
+                      )}
+                      {result.verified && result.signature && (
+                        <div className="flex justify-between items-center py-2 border-b border-gray-700">
+                          <span className="text-gray-400">Transaction:</span>
+                          <div className="flex items-center gap-2">
+                            <code className="text-xs text-orange-400 bg-orange-500/10 px-2 py-1 rounded">
+                              {result.signature.substring(0, 10)}...
+                            </code>
+                            <span
+                              className="cursor-pointer hover:text-white"
+                              onClick={() => {
+                                window.open(`https://explorer.solana.com/tx/${result.signature}?cluster=devnet`, '_blank');
+                              }}
+                              title="View on Solana Explorer"
+                            >
+                              <ExternalLink className="h-4 w-4 text-gray-400" />
+                            </span>
+                          </div>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center py-2">
                         <span className="text-gray-400">Verified At:</span>
                         <span className="text-gray-300">
