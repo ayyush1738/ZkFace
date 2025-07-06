@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,8 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Upload, Video, CheckCircle, XCircle, Loader2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { WalletContext } from '@solana/wallet-adapter-react';
+import { useRouter } from 'next/navigation'
 
 interface VerificationResult {
   isDeepfake: boolean;
@@ -20,6 +22,13 @@ interface VerificationResult {
 }
 
 export function VerifySection() {
+  const router = useRouter()
+  const {connected} = useContext(WalletContext);
+  if(!connected) {
+    toast.error("Please connect the wallet");
+    router.push("/");
+  }
+
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);

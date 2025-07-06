@@ -1,28 +1,28 @@
 'use client';
 
-import * as React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider } from 'wagmi';
-import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
-import { config } from '@/lib/wagmi';
-import '@rainbow-me/rainbowkit/styles.css';
+import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import {
+    WalletModalProvider,
+    WalletDisconnectButton,
+    WalletMultiButton
+} from '@solana/wallet-adapter-react-ui';
+import { clusterApiUrl } from '@solana/web3.js';
 
-const queryClient = new QueryClient();
+import '@solana/wallet-adapter-react-ui/styles.css';
+import { useMemo } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider 
-          theme={darkTheme({
-            accentColor: '#00D4FF',
-            accentColorForeground: 'black',
-            borderRadius: 'medium',
-          })}
-        >
-          {children}
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
-  );
+
+    const network = WalletAdapterNetwork.Devnet;
+    const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+ return (
+        <ConnectionProvider endpoint={endpoint}>
+            <WalletProvider wallets={[]} autoConnect>
+                <WalletModalProvider>
+                    {children}
+                </WalletModalProvider>
+            </WalletProvider>
+        </ConnectionProvider>
+    );
 }
