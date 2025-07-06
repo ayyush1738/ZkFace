@@ -26,8 +26,8 @@ const fetchCIDFromFastAPI = async (fileBuffer, filename) => {
       headers: form.getHeaders()
     });
 
-    const { ipfs_cid, phash, prediction_score } = response.data;
-    return { cid: ipfs_cid, phash, prediction_score };
+    const { ipfs_cid, phash, prediction_score, prediction_label } = response.data;
+    return { cid: ipfs_cid, phash, prediction_score, prediction_label };
   } catch (error) {
     console.error('Error getting CID from FastAPI:', error.message);
     return null;
@@ -100,6 +100,9 @@ export const processAndGetIPFSData = async (req, res) => {
     const isValid = await verifyZKProofFromFile(); 
     return res.json({
       ...inputData,
+      phash: result.phash,
+      cid: result.cid,
+      label: result.prediction_label,
       verified: isValid
     });
 
