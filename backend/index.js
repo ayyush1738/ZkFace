@@ -18,7 +18,6 @@ app.use('/api', healthcheckRouter);
 app.post("/api/submit-txn", async (req,res) => {
   try {
   const txn = req.body.signedTx;
-  console.log(txn)
   if(!txn) 
     return res.status(500).json({message: "Transaction required"})
   const connection = new Connection("https://api.devnet.solana.com");
@@ -28,7 +27,6 @@ app.post("/api/submit-txn", async (req,res) => {
   const feePayer = signedTx.feePayer;
   if (feePayer) {
     const balance = await connection.getBalance(feePayer);
-    console.log(`Fee payer balance: ${balance / 1e9} SOL`);
     
     if (balance === 0) {
       return res.status(400).json({

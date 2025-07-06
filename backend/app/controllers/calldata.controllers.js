@@ -69,7 +69,7 @@ async function createUnsignedSubmitProofTx(
       proofData.prediction_score,
       proofData.phash,
       proofData.cid,
-      proofData.verified
+      proofData.isValid
     )
     .accounts({
       proof: proofPda,
@@ -151,7 +151,7 @@ export const processAndGetIPFSData = async (req, res) => {
 
     const isValid = await verifyZKProofFromFile();
     const parameter = {
-      prediction_score: result.prediction_score,
+      prediction_score: scaled_score,
       phash: result.phash.startsWith('0x') ? result.phash.slice(2) : result.phash,
       cid: result.cid,
       isValid: isValid
