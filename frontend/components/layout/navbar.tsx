@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Shield, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { WalletDisconnectButton, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -60,8 +60,9 @@ export function Navbar() {
           </div>
 
           {/* Wallet Connection */}
-          <div className="hidden md:block">
-            <ConnectButton />
+          <div className="hidden md:flex md:items-center md:gap-2">
+            <WalletMultiButton/>
+            <WalletDisconnectButton/>
           </div>
 
           {/* Mobile menu button */}
@@ -95,7 +96,8 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="pt-4">
-                <ConnectButton />
+                <WalletMultiButton/>
+                <WalletDisconnectButton/>
               </div>
             </div>
           </motion.div>
