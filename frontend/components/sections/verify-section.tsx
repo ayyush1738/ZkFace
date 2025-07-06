@@ -13,8 +13,9 @@ import { toast } from 'sonner';
 interface VerificationResult {
   isDeepfake: boolean;
   confidence: number;
-  txHash: string;
+  phash: string;
   ipfsCid: string;
+  verified: boolean;
   timestamp: Date;
 }
 
@@ -47,37 +48,56 @@ export function VerifySection() {
     maxSize: 100 * 1024 * 1024, // 100MB
   });
 
-  const simulateProcessing = async () => {
+  const processVideo = async () => {
+    if (!uploadedFile) return;
+
     setIsProcessing(true);
     setProgress(0);
 
-    // Simulate processing steps
-    const steps = [
-      { message: 'Uploading video...', progress: 20 },
-      { message: 'Running AI analysis...', progress: 40 },
-      { message: 'Generating Zero-Knowledge Proof...', progress: 70 },
-      { message: 'Verifying on blockchain...', progress: 90 },
-      { message: 'Complete!', progress: 100 },
-    ];
+    try {
+      // Show initial progress
+      setProgress(10);
+      toast.info('Uploading video and processing...');
 
-    for (const step of steps) {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setProgress(step.progress);
-      toast.info(step.message);
+      // Create form data
+      const formData = new FormData();
+      formData.append('file', uploadedFile);
+
+      // Make API call to backend
+      const response = await fetch('http://localhost:5001/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      setProgress(80);
+      toast.info('Finalizing results...');
+
+      const data = await response.json();
+      setProgress(100);
+      toast.success('Processing complete!');
+
+      // Map API response to our result interface
+      const result: VerificationResult = {
+        isDeepfake: parseInt(data.prediction_score) > 50,
+        confidence: parseFloat(data.prediction_score),
+        phash: data.phash,
+        ipfsCid: data.cid,
+        verified: data.verified,
+        timestamp: new Date(),
+      };
+
+      setResult(result);
+    } catch (error) {
+      console.error('Error processing video:', error);
+      toast.error('Failed to process video. Please try again.');
+    } finally {
+      setIsProcessing(false);
+      setProgress(0);
     }
-
-    // Simulate result
-    const mockResult: VerificationResult = {
-      isDeepfake: Math.random() > 0.5,
-      confidence: Math.random() * 30 + 70, // 70-100%
-      txHash: '0x' + Math.random().toString(16).substr(2, 40),
-      ipfsCid: 'Qm' + Math.random().toString(36).substr(2, 44),
-      timestamp: new Date(),
-    };
-
-    setResult(mockResult);
-    setIsProcessing(false);
-    setProgress(0);
   };
 
   return (
@@ -157,7 +177,7 @@ export function VerifySection() {
                 )}
 
                 <Button
-                  onClick={simulateProcessing}
+                  onClick={processVideo}
                   disabled={!uploadedFile || isProcessing}
                   className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-600 hover:to-purple-700 disabled:opacity-50"
                 >
@@ -227,10 +247,10 @@ export function VerifySection() {
 
                     <div className="space-y-3">
                       <div className="flex justify-between items-center py-2 border-b border-gray-700">
-                        <span className="text-gray-400">Transaction Hash:</span>
+                        <span className="text-gray-400">Perceptual Hash:</span>
                         <div className="flex items-center gap-2">
                           <code className="text-xs text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded">
-                            {result.txHash.substring(0, 10)}...
+                            {result.phash.substring(0, 10)}...
                           </code>
                           <ExternalLink className="h-4 w-4 text-gray-400 cursor-pointer hover:text-white" />
                         </div>
@@ -242,6 +262,19 @@ export function VerifySection() {
                             {result.ipfsCid.substring(0, 10)}...
                           </code>
                           <ExternalLink className="h-4 w-4 text-gray-400 cursor-pointer hover:text-white" />
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-gray-700">
+                        <span className="text-gray-400">Blockchain Verified:</span>
+                        <div className="flex items-center gap-2">
+                          {result.verified ? (
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-400" />
+                          )}
+                          <span className={result.verified ? 'text-green-400' : 'text-red-400'}>
+                            {result.verified ? 'Yes' : 'No'}
+                          </span>
                         </div>
                       </div>
                       <div className="flex justify-between items-center py-2">
