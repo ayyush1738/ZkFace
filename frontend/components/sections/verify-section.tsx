@@ -110,8 +110,6 @@ export function VerifySection() {
         ],
       });
 
-      console.log("Proof accoutn data = ",proofAccountsData)
-
       const accounts: ProofAccount[] = [];
       for (const acc of proofAccountsData) {
         try {
@@ -188,7 +186,6 @@ export function VerifySection() {
             signedTx: signedTx.serialize().toString("base64"),
           }),
         });
-      console.log(signedRes);
       if (!signedRes.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -243,14 +240,14 @@ export function VerifySection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Upload Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Side - Upload Section */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Card className="bg-black/50 backdrop-blur border-gray-800">
+            <Card className="bg-black/50 backdrop-blur border-gray-800 h-full">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Upload className="h-5 w-5 text-cyan-400" />
@@ -327,78 +324,14 @@ export function VerifySection() {
             </Card>
           </motion.div>
 
-          {/* Verification History Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <Card className="bg-black/50 backdrop-blur border-gray-800">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <History className="h-5 w-5 text-purple-400" />
-                  Verification History
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loadingAccounts ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
-                    <span className="ml-2 text-gray-300">Loading history...</span>
-                  </div>
-                ) : proofAccounts.length > 0 ? (
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {proofAccounts.map((account, index) => (
-                      <motion.div
-                        key={account.pubkey}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="p-4 rounded-lg border border-gray-700 hover:border-purple-500/50 cursor-pointer transition-all duration-200 hover:bg-purple-500/10"
-                        onClick={() => setSelectedAccount(account)}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            {account.verified ? (
-                              <CheckCircle className="h-4 w-4 text-green-400" />
-                            ) : (
-                              <XCircle className="h-4 w-4 text-red-400" />
-                            )}
-                            <Badge className={`text-xs ${
-                              account.predictionScore > 50 
-                                ? 'bg-red-500/20 text-red-400 border-red-500/30' 
-                                : 'bg-green-500/20 text-green-400 border-green-500/30'
-                            }`}>
-                              {account.predictionScore > 50 ? 'FAKE' : 'REAL'}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-1 text-xs text-gray-400">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(account.timeProofed * 1000).toLocaleDateString()}
-                          </div>
-                        </div>
-                        <div className="text-sm text-gray-300">
-                          Score: {account.predictionScore}% | Hash: {account.phash.substring(0, 8)}...
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center text-gray-400 py-8">
-                    <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No verification history found</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Results Section */}
+          {/* Right Side - Results and History */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
+            className="space-y-6"
           >
+            {/* Verification Results Section */}
             <Card className="bg-black/50 backdrop-blur border-gray-800">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
@@ -506,6 +439,66 @@ export function VerifySection() {
                   <div className="text-center text-gray-400 py-12">
                     <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>Upload a video to see verification results</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Verification History Section */}
+            <Card className="bg-black/50 backdrop-blur border-gray-800">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <History className="h-5 w-5 text-purple-400" />
+                  Verification History
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingAccounts ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
+                    <span className="ml-2 text-gray-300">Loading history...</span>
+                  </div>
+                ) : proofAccounts.length > 0 ? (
+                  <div className="space-y-3 max-h-80 overflow-y-auto">
+                    {proofAccounts.map((account, index) => (
+                      <motion.div
+                        key={account.pubkey}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="p-4 rounded-lg border border-gray-700 hover:border-purple-500/50 cursor-pointer transition-all duration-200 hover:bg-purple-500/10"
+                        onClick={() => setSelectedAccount(account)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            {account.verified ? (
+                              <CheckCircle className="h-4 w-4 text-green-400" />
+                            ) : (
+                              <XCircle className="h-4 w-4 text-red-400" />
+                            )}
+                            <Badge className={`text-xs ${
+                              account.predictionScore > 55 
+                                ? 'bg-red-500/20 text-red-400 border-red-500/30' 
+                                : 'bg-green-500/20 text-green-400 border-green-500/30'
+                            }`}>
+                              {account.predictionScore > 55 ? 'FAKE' : 'REAL'}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-gray-400">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(account.timeProofed * 1000).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          Score: {account.predictionScore}% | Hash: {account.phash.substring(0, 8)}...
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-400 py-8">
+                    <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No verification history found</p>
                   </div>
                 )}
               </CardContent>
