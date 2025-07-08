@@ -15,7 +15,7 @@ def run_inference(video_path: str):
     shutil.copy(video_path, temp_path)
 
     # Step 3: Load model and run prediction on this isolated folder
-    weight = "CViT/weight/cvit2_deepfake_detection_ep_50.pth"
+    weight = os.path.join(os.path.dirname(os.path.abspath(__file__)), "CViT", "weight", "cvit2_deepfake_detection_ep_50.pth")
     net = "cvit2"
     num_frames = 15
     fp16 = False
