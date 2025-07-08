@@ -11,3 +11,4 @@ albumentations
 opencv-python-headless
 scikit-image
 gdown
+dlib==19.24.2
