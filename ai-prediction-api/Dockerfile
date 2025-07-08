@@ -1,29 +1,31 @@
-FROM bamos/dlib:latest
-
-# Set working directory
-WORKDIR /app
+FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Install required tools
+WORKDIR /app
+
+# --- Install system deps required by dlib ---
 RUN apt-get update && apt-get install -y \
-    ffmpeg libsm6 libxext6 python3-pip && \
-    pip3 install --upgrade pip gdown
+    build-essential cmake \
+    libboost-all-dev \
+    ffmpeg libsm6 libxext6 \
+    python3-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install your Python packages
+# --- Install Python deps (skip dlib here to avoid build time) ---
 COPY requirements.txt .
-RUN pip3 install -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install gdown && \
+    pip install --no-cache-dir -r requirements.txt || true  # skip dlib errors here
 
-# Download model from Google Drive (replace with your actual file ID)
+# --- Copy rest of the app ---
+COPY . .
+
+# --- Download model if not already present ---
 RUN mkdir -p CViT/weight && \
     gdown https://drive.google.com/uc?id=1o4BnP36epEN3pVbXz6NS4dJO3SiJjg4D -O CViT/weight/cvit2_deepfake_detection_ep_50.pth
 
-# Copy your source code
-COPY . .
-
-# Expose FastAPI port
-EXPOSE 8000
-
-# Run FastAPI
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# --- Install dlib at runtime, not during build ---
+CMD pip install dlib && \
+    uvicorn main:app --host 0.0.0.0 --port 8000
